@@ -628,6 +628,8 @@ while (loan > 0) {    # 【知识点】贷款计算：先计息再还款，用||
     cat("第", month, "个月，剩余本金：", round(max(loan, 0), 2), "元\n")
   }
 }    # 先计息，再还款
+''
+
 
 
 
@@ -655,7 +657,10 @@ while (loan > 0) {    # 【知识点】贷款计算：先计息再还款，用||
 # 【知识点】月供对还款的影响
 # 月供2000 - 永远还不完（月息1125 > 2000）
 # 月供5000 - 约114个月，9.5年，利息14万
-# 月供8000 - 约67个月，5.6年，利息7万
+#
+
+.
+8000 - 约67个月，5.6年，利息7万
 
 # 【观察】月供增加，还款年限和利息都大幅减少，不是线性关系
 # 【思考】月供翻倍，还款年限不到减半，因为复利在起作用
@@ -684,6 +689,7 @@ month <- 0
 
 
 
+
 # ── 6.1　break：立刻跳出整个循环 ────────────────────────────────────────────────────────
 
 
@@ -698,6 +704,7 @@ for (i in 1:10) {    # 【知识点】break：遇到5就跳出整个循环
   if (i == 5) break
   print(i)
 }
+
 # 打印 1 2 3 4，到 5 就走人
 
 
@@ -766,7 +773,8 @@ repeat {    # 【知识点】repeat：必须搭配break使用，否则死循环
 
 s <- c(1, 1)
 i <- 3
-repeat {    # 【知识点】斐波那契数列：repeat适合事先不知道循环次数的场景
+repeat { # 【知识点】斐波那契数列：repeat适合事先不知道循环次数的场景
+  print(next_fib)
   next_fib <- s[i-1] + s[i-2]
   if (next_fib > 1000) break
   s <- c(s, next_fib)
@@ -825,7 +833,7 @@ numbers[numbers %% 3 != 0]
 
 
 # ── 7.1　扔一枚骰子，6 点出现的概率会趋近 1/6 吗？ ──────────────────────────────────────────────
-N <- 100000
+N <- 10000000
 k <- 0
 
 
@@ -862,7 +870,7 @@ mean(sample(1:6, N, replace = TRUE) == 6)
 # ── 7.2　★ 课堂练习：一次扔 3 枚骰子，点数之和为 10 的概率是多少？ ─────────────────────────────────────
 
 # 用模拟验证：
-times <- 10000
+times <- 1000000
 count <- 0
 
 
@@ -996,6 +1004,108 @@ pass_rate
 #        if (mtcars$mpg[i] > 20) x <- c(x, mtcars$mpg[i])
 #      }
 #    （提示：想想 seq_along、预分配，以及 —— 这件事真的需要循环吗？）
+
+# ========== 作业1 扫地机器人：循环 + 向量化 ==========
+cmd <- c("前","前","后","左","前","右","后","前")
+
+# 方法1 for循环
+pos <- 0
+for (s in cmd) {
+  if (s == "前") pos <- pos + 1
+  else if (s == "后") pos <- pos - 1
+}
+cat("【作业1】循环法最终离原点步数：", pos, "\n")
+
+# 方法2 向量化
+delta <- ifelse(cmd=="前",1,ifelse(cmd=="后",-1,0))
+pos2 <- sum(delta)
+cat("【作业1】向量化法最终离原点步数：", pos2, "\n\n")
+
+
+# ========== 作业2 复利计算器 while循环 ==========
+p <- 10000
+r <- 0.03
+target <- 2 * p
+year <- 0
+money <- p
+
+while (money < target) {
+  money <- money * (1 + r)
+  year <- year + 1
+}
+cat("【作业2】本金翻倍需要", year, "年，此时金额：", round(money,2), "\n\n")
+
+
+# ========== 作业3 贷款计算器，输出表格 ==========
+loan <- 500000
+annual_rate <- 0.049
+r_month <- annual_rate / 12
+payment_vec <- c(3000,4000,5000)
+
+res <- data.frame(月供=numeric(), 还款年数=numeric(), 总利息=numeric())
+
+for (pay in payment_vec) {
+  bal <- loan
+  month <- 0
+  total_pay <- 0
+  while(bal > 0){
+    bal <- bal * (1 + r_month) - pay
+    total_pay <- total_pay + pay
+    month <- month + 1
+  }
+  year <- month / 12
+  interest <- total_pay - loan
+  res <- rbind(res, data.frame(月供=pay, 还款年数=round(year,2), 总利息=round(interest,2)))
+}
+cat("【作业3】贷款结果表：\n")
+print(res)
+cat("感受：月供越高，还清贷款的速度越快，付出的总利息明显变少。利息是资金的时间成本，拉长还款周期会让利息负担大幅增加。在收入允许的前提下，适当提高月供可以省下可观的利息。\n\n")
+
+
+# ========== 作业4 蒙特卡洛模拟扔2枚骰子 + 收敛图 ==========
+set.seed(123)
+N_max <- 100000
+p_record <- numeric(N_max)
+count7 <- 0
+theory_p <- 1/6
+
+for (i in 1:N_max) {
+  d1 <- sample(1:6, 1)
+  d2 <- sample(1:6, 1)
+  if (d1 + d2 == 7) count7 <- count7 + 1
+  p_record[i] <- count7 / i
+}
+
+cat("【作业4】理论概率：", round(theory_p,4), "，模拟最终概率：", round(p_record[N_max],4), "\n")
+plot(p_record, type="l", lwd=1, col="#2277bb", ylim=c(0,0.3),
+     xlab="模拟次数", ylab="频率", main="两枚骰子点数和=7，频率收敛曲线")
+abline(h=theory_p, col="red", lty=2)
+legend("topright", legend=c("模拟频率","理论值1/6"), col=c("#2277bb","red"), lty=c(1,2))
+cat("\n")
+
+
+# ========== 作业5 代码问题分析 + 改写 ==========
+cat("【作业5】原代码问题：
+1. 循环内不断用c(x, ...)追加向量，反复复制，效率很低；
+2. 使用1:length()，向量为空时会生成1:0，引发错误，应该用seq_along；
+3. 这个任务根本不需要循环，R可以直接向量化索引筛选。\n")
+
+# 最优改写（向量化，推荐）
+x <- mtcars$mpg[mtcars$mpg > 20]
+cat("改写后筛选结果（mpg>20）：\n")
+print(x)
+
+# 补充：规范预分配+seq_along循环版本（仅作对比学习）
+mpg_vec <- mtcars$mpg
+x_pre <- numeric(length(mpg_vec))
+k <- 0
+for (i in seq_along(mpg_vec)) {
+  if (mpg_vec[i] > 20) {
+    k <- k + 1
+    x_pre[k] <- mpg_vec[i]
+  }
+}
+x_pre <- x_pre[1:k]
 
 
 # ══════════════════════════════════════════════════════════════════════════════
